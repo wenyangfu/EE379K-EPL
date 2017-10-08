@@ -1,0 +1,94 @@
+/*
+* Goals for STL:
+* 1. Generic w/ respect to element type
+* 2. Generic w/ respect to data structure type
+* 3. Predictable w/ time complexity
+* 4. Comparable/competitive performance w/ hand-written custom code
+*/
+
+template <typename T>
+void sort(T* b, T* e) {
+	if (b == e) { return; } // done
+	T count { b };
+	++count;
+
+	/* Right now, our sorting algo will be able to sort C++ strings,
+	 * but not C strings, b/c the '<' operator is only implemented
+	 * for C++ strings. */
+
+	while (count != e) {
+		T j { b };
+		T jplus1 { j };
+		++jplus1;
+		while (jplus1 != e) {
+			if (*j > *jplus1) {
+				swap(*j, *jplus1);
+			}
+			++j;
+			++jplus1;
+		}
+		++b;
+		++count;
+	}
+}
+
+/* Fundamental operators on pointers:
+ * 1. dereference (operator*)
+ * 2. check for equality (operator==)
+ * 3. Advance (operator++); 
+ 		the above are "forward iterators"
+ * 4. Retreat (operator--); 
+ 		the above are "bidirectional iterators"
+ * 5. Advance by an integer amount (operator+)
+ * 6. Calculate a distance (operator-)
+
+ p != q is really !(p == q)
+ p < q is really p - q < 0
+ p[k] is really *(p + k)
+ */
+
+ template <typename T>
+ T max(T const& x, T const& y) {
+ 	if (x < y) { return y; }
+ 	else { return x; }
+ }
+
+/* 
+ * In STL: the convention is that a container is identified as the range [b, e)
+ * i.e., e is one AFTER the last element!
+ */
+ template <typename It>
+ void printContainer(It b, It e) {
+ 	const char* pref = "";
+ 	for (int k = 0; k < n; k += 1) {
+ 		cout << pref << x[k];
+ 		pref = ", ";
+ 	}
+ 	cout << endl;
+ }
+
+
+ int main(void) {
+ 	int x[] = { 5, 3, 8, 1, 6, 9, 2, 4, 0, 7};
+ 	int n = 10;
+ 	std::list<int> y = { 5, 3, 8, 1, 6, 9, 2, 4, 0, 7};
+ 	cout << "original: "; printContainer(y.begin(), y.end());
+ 	sort(&x[0], &x[n]);
+ 	sort();
+ 	cout << "sorted: "; printContainer(y.begin(), y.end());
+ 	/* NOTE: Need to know this!!!
+ 	 * The conventional name of the iterator type for any data structure
+ 	 * (e.g., list<int>) is DS::iterator
+ 	 * e.g., list<int>::iterator */
+
+ 	 /* The compiler is totally happy to deduce the first argument (std::list<int>::iterator),
+      * But very unhappy about deducing the second argument. */
+ 	 // sort<std::list<int>::iterator, GenComp<int>>(y.begin(), y.end());
+ 	 sort(y.begin(), y.end(), GenComp<int>{}); // NOTE: You must construct a comparison object, b/c you can't just pass a type to the function.
+ 	 // sort(&x[0], &x[n]);
+ 	 cout << "sorted: "; printContainer(y.begin(), y.end());
+
+ 	 /* in Modern C++, basic syntax checking is done by the compiler, but template errors 
+ 	  * are usually not detected until templates are compiled. */
+ }
+

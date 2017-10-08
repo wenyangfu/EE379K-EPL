@@ -1,0 +1,52 @@
+1. How to go about writing an iterator (major part of Project 1C)
+2. Member templates (also in Project 1C)
+3. Variadic Templates, emplace_back()
+4. Switch back to iterator_traits (our 1st intro to a template metaprogram)
+
+
+// BST may be immutable, but a iterator over a BST should naturally traverse
+// over the tree in a natural order.
+
+// However, if you use an iterator to arbitrarily modify some value in a BST,
+// you'd break the tree's invariant on natural ordering... and the iterator would
+// just break!!!
+
+// It's not possible to put the const operator in front of the type.
+
+int main(void) {
+	String s{"Hello World"};
+	if (s != "Hello World") {
+
+	}
+	char s2[] = "Hello World";
+
+	char* p2 = &s[0];
+	char const* const_p2 = &s[0]; // Here, the pointer is mutable, but what it points to is immutable.
+
+	auto p = s.begin(); // Rarely need to declare the type of the iterator in practice
+
+	String::iterator const p = s.begin(); // Frustratingly, the iterator itself becomes immutable in this case.
+	++p;  // Thus, the iterator can no longer advance or retreat.
+	// iterator const is not the same as char const*.
+	// It's effectively the same as doing char* const -- where the point cannot be changed.
+	// The compiler treats us as wanting to make an immutable pointer, as opposed
+	// to a pointer to immutable data.
+
+	// Instead, we can use a second iterator type:
+	String::const_iterator constp = s.begin(); // An iterator pointing to immutable data
+	String::iterator p = s.begin(); // An iterator pointing to mutable data
+	*p = 'J';
+}
+
+public:
+	using iterator=iterator_helper<char>;
+	using const_iterator=iterator_helper<const char>;
+
+	String(void) {
+		storage = nullptr;
+		data = nullptr;
+		storage_size = 0;
+		len = 0;
+	}
+
+	String()

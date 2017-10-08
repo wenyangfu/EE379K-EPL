@@ -1,0 +1,180 @@
+// EE379K - EPL
+// 2-18-2016
+
+#include <iostream>
+#include <cstdint>
+
+using std::cout;
+using std::endl;
+
+class Base {
+public:
+
+};
+
+class Derived : public Base {
+public:
+	~Derived(void) { cout<< "OK, cleaned up\n"; }
+};
+
+int main(void) {
+	Base b;
+	Derived d;
+	Base* p = &d;
+}
+
+int main(void) {
+	// This will lead to issues?
+	Base* p = new Derived;
+
+	// This is problematic, only the Base class's destructor is called,
+	// not the derived object's.
+	// Virtual destructors will force the compiler to use dynamic binding to figure out
+	// the type of an object at runtime, so it calls the correct destructor.
+
+	// The base class should be managing the resources of the Base class, while the Derived class
+	// should only be managing the resources of the Derived class, and not the Base class. This prevents
+	// C++ from violating encapsulation. Thus, a Derived object would call its own destructor, and in turn,
+	// also invokes the Base class destructor. (Most compilers implement it this way.)
+
+	// Chase thinks that Destructors should be VIRTUAL BY DEFAULT! 
+	// Every time you invoke a function w/ dynamic binding, there will be a performance overhead.
+	p->~Base();
+
+	delete p;
+}
+
+class Foo {
+public:
+	~Foo(void) {
+		cout << "cleaned up\n";
+	}
+};
+
+class Base {
+public:
+	~Base(void) {
+		cout << "Base class too\n";
+	}
+}
+
+// Revise some code:
+
+class Base {
+public:
+	virtual ~Base(void) = default;
+
+	// Abstract function in C++, basically a function that must be
+	// implemented in a derived class. This is called a "pure virtual function"
+	virtual void draw(void) = 0;
+};
+
+class Derived : public Base {
+public:
+	Foo resource;
+	virtual void draw(void) override {}
+};
+
+class Sorter {
+public:
+	virtual bool lessThan(int a1, int a2) {
+
+	}
+
+	void sort(int x[], int n) {
+		/* ... */
+		if (lessThan(x[k], x[j])) {
+			// Compare if these two elements are sorted in the right way,
+			// or wrong way?
+		}
+	}
+}
+
+// C standard library sort function
+// Oh goodness don't do this in C++
+// Mainly talking about function pointers.
+
+void qsort(void data[], int num_elems, int size_elem, 
+	int (*pfun)(void*, void*)) {
+	// pfun is a function pointer
+
+	int result_value = (*pfun) ()
+}
+
+int compare(void* x, void* y) {
+	double x =
+}
+
+// A C++ way to write quicksort
+template <typename SomeFun>
+void qsort(double x[], int n, SomeFun) {
+	if (SomeFun{}(x[0], x[1] < 0)) {
+		cout << "whoopie!\n";
+	}
+}
+
+
+
+// A way to do function pointers in C++:
+// C++ leverages operator overloading to make invoking Function objects
+// look exactly like using a regular function.
+
+class FunObject {
+public:
+	int operator()(double x, double y) {
+		if (x < y) { return - 1; }
+		if (y < x) { return 1; }
+		return 0;
+	}
+};
+
+void myApp(void) {
+	// qsort(&data, 500, 8, &compare);
+	FunObject fun;
+	double x[1000];
+	int n = 1000;
+
+	qsort(x, n, fun);
+
+}
+
+
+
+class LifeForm{
+public:
+};
+
+using PFun = void(*)(void); // Pointer to function type (from C)
+using PMemFun = void (LifeForm::*)(void); // Pointer to lifeform member fun
+
+class FunObj {
+	PFun pfun;
+	PMemFun pmfun;
+	LifeForm& obj;
+public:
+	// void operator()(void) {
+	//  (*pfun)();
+	// }
+
+	void operator()(void) {
+		// Polymorphically select b/w member functions and regular functions
+		// 
+		(obj.*pmfun)();
+	}
+	void operator()(void) {
+		
+	}
+};
+
+
+int main(void) {
+	Derived d; 
+	Base* b = new Base; // This works, but we can't call draw().
+}
+
+// If you expect to make a class that engages in polymorphic behavior,
+// MAKE THE DESTRUCTOR VIRTUAL! The overhead is worth it.
+
+// It is possible to mix pure virtual and virtual functions in a class.
+
+// The compiler can possibly inline functions 

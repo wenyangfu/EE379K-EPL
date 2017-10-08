@@ -1,0 +1,42 @@
+template <typename FI, typename Comp>
+FI partition(FI b, FI e, Comp comp) {
+	
+}
+
+template <typename BI, typename Comp>
+BI partition_bi(BI begin, BI end, Comp comp) {
+	/* invariant: [b, lo) are all strictly less than pivot
+	 * [hi, e) are all not less than pivot
+	 * *piv_pos is the pivo value (we put piv_pos at the end)
+	 * for convenience */
+
+	 if (begin == end) { return begin; } // ill defined
+	 --end;
+
+	 /* I'm being lazy here, we'll use the last element as pivot value */
+	 BI piv_pos{ end };
+	 BI lo{ begin };
+	 BI hi{ end };
+
+	 while (lo < hi) {
+	 	while (lo < hi && comp(*lo, *piv_pos)) {
+	 		++lo;
+	 	}
+	 	while (lo < hi && comp(*piv_pos, *hi)) {
+	 		--hi;
+	 	}
+	 	if (lo < hi) {
+	 		swap(*lo, *hi);
+	 	}
+	 }
+
+	 swap(*lo, *piv_pos);
+	 return lo;
+}
+
+/*
+So it seems like this quicksort algorithm implemented with Backwards Iterators
+would not work for a linked list. After all, we cannot compute lo and hi
+in constant time for a linked list. 
+*/
+

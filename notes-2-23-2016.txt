@@ -1,0 +1,184 @@
+#include <vector>
+
+
+// Don't like unions as a design - very c-style
+// Go for inheritance instead!
+
+template <typename T>
+using PMemFun = void (T::*)(void); // pointer to LifeForm member fun
+
+class FunObj {
+	PFun pfun;
+	PMemFun pmfun;
+	LifeForm& obj;
+public:
+	// C-style - function pointer
+	// void operator()(void) {
+	// *(pfun)();
+	//}
+
+	// C++ style - function object
+	void operator()(void) {
+		(obj.*pmfun)();
+	}
+}
+
+// Let's make a more generic function object (templated!) Take the union apart
+
+
+	// It's possible that the function has parameters!
+
+	// The first one that works with mundane functions - doesn't need any template args
+	// Designing a class to represent arbitrary functions - its possible that the function we want to represent has params.
+	// If that's the case, we may need to make the C-style function a template function, b/c we don't know the type of the param args.
+
+	// In this case' we're saved because the operator function call has no input params and no return values.
+
+	// In the second type, (works with pointers to member functions)
+	// LifeForm is a proxy - want to handle any kind of object.
+	// C++ style - function object
+
+
+
+
+// Define the common interface b/w 2 different types of function objects we're going to build
+class FunObjBase {
+public:
+	virtual void operator()(void) = 0;
+	uint32_t refs = 0; // Add reference counting to our base class
+	virtual ~FunObjBase(void) = default;
+};
+
+class BasicFunObj: public FunObjBase {
+	PFun pfun;
+public:
+	void operator()(void) {
+		(*pfun)();
+	}
+};
+
+template <typename T>
+class BasicFunObj: public FunObjBase {
+	PFun pfun; // Member function fun objects
+	T& obj;
+public:
+	void operator()(void) {
+		(obj.*pfun)();
+	}
+}
+
+// Function object for member functions.
+template <typename T>
+class MemFunFunObj: public FunObjBase {
+	using PMemFun = void (T::*)(void); // pointer to LifeForm member fun
+	PMemFun pmfun;
+	T& obj;
+public:
+	// We have to bind member references using initializer lists.
+	MemFunFunObj(T& o, PMemFun f) : obj(o) {
+		pmfun = f;
+	}
+	void operator()(void) { 
+		(obj.*pmfun)();
+	}
+}
+
+// Wrapper over FunObjBase object
+// Every method that's part of the object you're wrapping
+// must be implemented in the wrapper!
+class Fun {
+	FunObjBase* ptr;
+public:
+	void operator()(void) {
+		(*ptr)();
+	}
+
+	Fun(Fun const& rhs) {
+		ptr = rhs.ptr;
+		ptr->refs += 1;
+	}
+
+	~Fun(void) {
+		ptr->refs -= 1;
+		if (ptr->refs == 0) {delete ptr;}
+	}
+
+	Fun(PFun f) { // Factory constructor for function object
+		ptr = new BasicFunObj{f};
+		ptr->refs = 1;
+	}
+
+	template <typename T>
+	Fun(T& obj, PMemFun<T> f) { // Factory constructor fur member function object
+		ptr = new MemFunFunObj<T>{obj, f};
+		ptr->refs = 1;
+	}
+};
+
+
+int main(void) {
+	// Assume that we have a data structure (queue) that contains all the work we need to do!
+	// Some of the objects 
+
+	std::vector<FunObjBase> queue;
+
+	LifeForm bug;
+	Fun f1{bug, &LifeForm::doit}; // Factory method for function objects
+
+	// FIXME: BUG Section!
+	// We want to have runtime polymorpism.
+	// Why did the code not compile?
+	MemFunFunObj<LifeForm> fun1{bug, &LifeForm::doit};
+
+	// push_back uses move constructor to construct a FunObjBase, since we have a vector<FunObjBase>
+	// unfortunately, this means that we don't get the behavior we want - to construct a LifeForm obj in this case.
+	// The fun1 LifeForm object will get truncated into a FunObjBase object.
+	queue.push_back(MemFunFunObj{})
+
+	// How do we fix it?
+	// README: Fix:
+	// queue.push_back(new MemFunFunObj<LifeForm> {bug, &LifeForm::doit});
+	queue.push_back(f1);
+
+	Fun f2{& ::doit};
+
+	while (!queue.empty()) {
+		auto& fun = queue.front();
+		fun();
+		queue.pop_back();
+	}
+}
+
+// Intro to lambdas in C++11:
+
+template <typename Fun>
+void doSomething(Fun f) {
+	f();
+}
+
+class Silly {
+public:
+	void operator()(void) {
+		cout << "Hello World\n";
+	}
+};
+
+int main(void) {
+	// Ugh! Look at this, we had to make a class to do something simple like 
+	// Printing "Hello, World" with another level of indirection!
+	Silly blah;
+	doSomething(blah);
+}
+
+// Let's use lambdas instead!
+
+int main(void) {
+	// Define a lambda function and assign it to "blah"
+	// the pair of square brackets = "I'M MAKING A LAMBDA"
+	auto blah = [](void) { cout << "Hello World\n"; };
+	doSomething(blah);
+
+	Foo2 f;
+	auto blah2 = [f] (void) { cout << "Hello WOrld\n"; };
+	doSomething(blah2);
+}

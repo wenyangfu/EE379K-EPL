@@ -1,0 +1,132 @@
+EPL - Notes 2/9/2016
+
+
+using std::count;
+using std::endl;
+using std::vector;
+
+
+class myvec : public vector<int> {
+public:
+	using vector<int>::vector;
+	// We're deriving a class from the base class vector<int>.
+	// 
+	myvec(int sz) : vector<int>(sz + 1) {}
+
+	int& operator[](int k) {
+		if (k < 0 || k >= size()) {
+			cout << "WTF dude?\n";
+		}
+		vector<int>& base = *this;
+		// return base[k]; // If we want syntax closer to Java, this would allow the compiler to locate the right functions.
+
+		// Fully qualified function name?
+		return this->vector<int>::operator[](k);
+
+	}
+};
+
+// Extending a class/struct:
+
+// With single inheritance, this support is failry simple. All of the new fields are appended to the end of the old obj.
+// To invoke a base function, nothing special is required, just pass "this" as we normally would (w/ single inheritance).
+// When a derived object extends a base class, it has a Base object in it!!!
+
+class Base1 {
+public:
+	int x;
+	int y;
+};
+
+// class Derived : public Base1 {
+// 	int z;
+// };
+
+class Base1 {
+public:
+	int x;
+	int y;
+	void doit(void) {
+		cout << "this points to" << this << " in Base1\n";
+	}
+
+	virtual void whoa(void) { cout << "gotcha\n"; }
+};
+
+class Base2 {
+public:
+	int z;
+	void doit(void) {
+		cout << "this points to" << this << " in Base2\n";
+		whoa();
+	}
+
+	virtual void whoa(void) { cout << "this is Base2?"; }
+};
+
+// The "this" pointer for the Derived class is manipulated by the compiler
+// when multiple inheritance happens
+// When Base1 functions are called, "this" points @ beginning of Base1
+// When Base2 functions are called, "this" points @ beginning of Base2
+// When Derived functions are called, "this" points @ beginning of Derived obj
+// (I think its the location of Base2 object??? I'm confused)
+class Derived : public Base1, public Base2 {
+public:
+	int dez;
+	void doit(void) {
+		cout << "this points to " << this << "in Derived\n";
+	}
+	virtual void whoa(void) {
+		cout << "this is derived\n";
+	}
+};
+
+// class Derived : public Base2
+
+void doit(const Base1& b) {}
+
+
+void inheritMemberFunctions(void) {
+	Derived d;
+	cout << "d is address " << &d << endl;
+	d.Base1::doit();
+	d.Base2::doit();
+	d.Derived::doit();
+
+}
+
+int main(void) {
+	// C++ 11 keyword that doesn't work with all types,
+	// but it will work for any POD types and their derivatives
+	int x_off = offsetof(Base1, x);
+	int y_off = offsetof(Base1, y);
+
+	cout << "x has offset" << x_off;
+	cout << "and y has offset " << y_off;
+	cout << endl;
+
+
+
+	Base1 b;
+	Derived d;
+
+	d = b; 
+	b = d; // Only the base class gets copied here!!!
+}
+
+// The Implied subtype relationship:
+// This simple implementation trick means that a Derived obj can be used any place that a Base obj was expected (their "this" pointers are the same).
+// C++ provides a subtype (the "isa") relationship "a Derived is a Base"
+
+
+
+-------------------------------
+
+class B1 : public Counter{};
+class B2 : public Counter );
+class D : public B1, B2 {};
+D d; // how many times is x incremented?
+- Every D object has two Counters! (x == 2).
+- Instead, we use virtual inheritance:
+class B1 : public virtual Counter {};
+class B2 : public virtual Counter {};
